@@ -51,13 +51,35 @@ from werkzeug.utils import secure_filename
 import os
 UPLOAD_FOLDER = 'static/upload/'
 app = Flask(__name__)
+
+@app.route('/detect-signature',methods=['GET', 'POST'])
+def detect_signature():
+  if request.method == 'POST':
+    f = request.files['file']
+    path = UPLOAD_FOLDER+'crop.png'
+    f.save(path)
+    loader = Loader()
+    mask = loader.get_masks(path)[0]
+    extractor = Extractor(amplfier=15)
+    labeled_mask = extractor.extract(mask)
+    cropper = Cropper()
+    results = cropper.run(labeled_mask)
+
+    if len(results)>0:
+      signature = results[0]["cropped_mask"]
+      cv2.imwrite(path,signature)
+      return render_template('detect.html', check=True)
+  return render_template('detect.html', check=False)
+
+
+
+
 @app.route('/',methods=['GET', 'POST'])
 def upload_file():
   if request.method == 'POST':
       f = request.files['file']
       path = UPLOAD_FOLDER+'sign.png'
       f.save(path)
-      
       f_dists, f_ids = predict(path)
       list_near = get_object(f_dists, f_ids)
       return render_template('index.html', list_near=list_near)
