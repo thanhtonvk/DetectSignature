@@ -72,6 +72,9 @@
 
 <body>
     <div class="row">
+        {%if notify%}
+        <p class="alert alert-warning">{{notify}}</p>
+        {% endif %}
         <div class="col-6">
             <form action="/" method="POST" enctype="multipart/form-data">
                 <input type="file" name="file" />
